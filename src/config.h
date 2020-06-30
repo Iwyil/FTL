@@ -11,7 +11,7 @@
 #define CONFIG_H
 
 // typedef int16_t
-#include <sys/types.h>
+#include <stdint.h>
 
 void getLogFilePath(void);
 void read_FTLconf(void);

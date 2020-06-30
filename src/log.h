@@ -14,7 +14,7 @@
 #include <time.h>
 
 void open_FTL_log(const bool test);
-void logg(const char* format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
+void logg(const char* format, ...) __attribute__ ((format (__printf__, 1, 2)));
 void log_counter_info(void);
 void format_memory_size(char *prefix, unsigned long long int bytes, double *formated);
 const char *get_FTL_version(void) __attribute__ ((malloc));

@@ -37,6 +37,13 @@ GIT_TAG := $(shell git describe --tags --abbrev=0)
 # Is compiler at least gcc version 8? We cannot do ifgt in Makefile, so we use the shell expr command
 GCCVERSION8 := $(shell expr `$(CC) -dumpversion | cut -f1 -d.` \>= 8)
 
+### Since this is not supported, it is a temporary solution and it is expected to be specified exactly CC as clang as environment variable
+ifeq "$(CC)" "clang"
+  GCCVERSION8 = "0"
+else
+  EXTRAWARN:=-Wlogical-op
+endif
+
 # Code hardening and debugging improvements
 # -fstack-protector-strong: The program will be resistant to having its stack overflowed
 # -Wp,-D_FORTIFY_SOURCE=2 and -O1 or higher: This causes certain unsafe glibc functions to be replaced with their safer counterparts
@@ -50,8 +57,14 @@ GCCVERSION8 := $(shell expr `$(CC) -dumpversion | cut -f1 -d.` \>= 8)
 # -Wl,-z,defs: Detect and reject underlinking (phenomenon caused by missing shared library arguments when invoking the linked editor to produce another shared library)
 # -Wl,-z,now: Disable lazy binding
 # -Wl,-z,relro: Read-only segments after relocation
-HARDENING_FLAGS=-fstack-protector-strong -Wp,-D_FORTIFY_SOURCE=2 -O3 -Wl,-z,relro,-z,now -fexceptions -funwind-tables -fasynchronous-unwind-tables -Wl,-z,defs -Wl,-z,now -Wl,-z,relro
-DEBUG_FLAGS=-rdynamic -fno-omit-frame-pointer
+
+### Clang absolutely don't like having some linker option during the compilation and emit a warning for every option in every translation unit
+### apparently, the linker seems to ingnore compilation options
+### So, splitted option to delete linker flags from compilation
+HARDENING_CFLAGS=-fstack-protector-strong -Wp,-D_FORTIFY_SOURCE=2 -O3 -fexceptions -funwind-tables -fasynchronous-unwind-tables
+HARDENING_LDFLAGS=-fstack-protector-strong -Wp,-D_FORTIFY_SOURCE=2 -O3 -Wl,-z,relro,-z,now -fexceptions -funwind-tables -fasynchronous-unwind-tables -Wl,-z,defs -Wl,-z,now -Wl,-z,relro
+DEBUG_CFLAGS=-fno-omit-frame-pointer
+DEBUG_LDFLAGS=-rdynamic -fno-omit-frame-pointer
 
 # -DSQLITE_OMIT_LOAD_EXTENSION: This option omits the entire extension loading mechanism from SQLite, including sqlite3_enable_load_extension() and sqlite3_load_extension() interfaces. (needs -ldl linking option, otherwise)
 # -DSQLITE_DEFAULT_MEMSTATUS=0: This setting causes the sqlite3_status() interfaces that track memory usage to be disabled. This helps the sqlite3_malloc() routines run much faster, and since SQLite uses sqlite3_malloc() internally, this helps to make the entire library faster.
@@ -97,11 +110,11 @@ ifeq "$(GCCVERSION8)" "1"
 else
   EXTRAWARN_GCC8=
 endif
-EXTRAWARN=-Werror -Waddress -Wlogical-op -Wmissing-field-initializers -Woverlength-strings -Wformat -Wformat-nonliteral -Wuninitialized -Wswitch-enum -Wshadow \
--Wfloat-equal -Wbad-function-cast -Wwrite-strings -Wparentheses -Wlogical-op -Wstrict-prototypes -Wmissing-prototypes -Wredundant-decls -Winline $(EXTRAWARN_GCC8)
+EXTRAWARN:=-Werror -Waddress -Wmissing-field-initializers -Woverlength-strings -Wformat -Wformat-nonliteral -Wuninitialized -Wswitch-enum -Wshadow \
+-Wfloat-equal -Wbad-function-cast -Wwrite-strings -Wparentheses -Wstrict-prototypes -Wmissing-prototypes -Wredundant-decls -Winline $(EXTRAWARN_GCC8)
 
 # -FILE_OFFSET_BITS=64: used by stat(). Avoids problems with files > 2 GB on 32bit machines
-CCFLAGS=-std=gnu11 -pipe -I$(IDIR) $(WARN_FLAGS) -D_FILE_OFFSET_BITS=64 $(HARDENING_FLAGS) $(DEBUG_FLAGS) $(CFLAGS) $(SQLITE_FLAGS) -DHAVE_POLL_H
+CCFLAGS=-std=gnu11 -pipe -I$(IDIR) $(WARN_FLAGS) -D_FILE_OFFSET_BITS=64 $(HARDENING_CFLAGS) $(DEBUG_CFLAGS) $(CFLAGS) $(SQLITE_FLAGS) -DHAVE_POLL_H
 # We define HAVE_POLL_H as this is needed for the musl builds to succeed
 
 # for FTL we need the pthread library
@@ -111,13 +124,16 @@ LIBS=-pthread -lrt -Wl,-Bstatic -L/usr/local/lib -lhogweed -lgmp -lnettle
 # Flags for compiling with libidn : -lidn
 # Flags for compiling with libidn2: -lidn2
 
+LDFLAGS := $(HARDENING_LDFLAGS) $(DEBUG_LDFLAGS)
+
 # Do we want to compile a statically linked musl executable?
 ifeq "$(STATIC)" "true"
   CC := $(CC) -Wl,-Bstatic -static-libgcc -static-pie
 else
   LIBS := $(LIBS) -Wl,-Bdynamic
   # -pie -fPIE: (Dynamic) position independent executable
-  HARDENING_FLAGS := $(HARDENING_FLAGS) -pie -fPIE
+  HARDENING_CFLAGS := $(HARDENING_CFLAGS) -fPIE
+  HARDENING_LDFLAGS := $(HARDENING_LDFLAGS) -pie
 endif
 
 DB_OBJ_DIR = $(ODIR)/database
@@ -157,7 +173,7 @@ $(DNSMASQ_OBJ_DIR):
 	mkdir -p $(DNSMASQ_OBJ_DIR)
 
 pihole-FTL: $(_FTL_OBJ) $(_DNSMASQ_OBJ) $(DB_OBJ_DIR)/sqlite3.o
-	$(CC) $(CCFLAGS) -o $@ $^ $(LIBS)
+	$(CC) $(CCFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 .PHONY: clean force install
 

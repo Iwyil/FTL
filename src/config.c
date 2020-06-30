@@ -553,7 +553,7 @@ void get_blocking_mode(FILE *fp)
 }
 
 // Routine for setting the debug flags in the config struct
-static void setDebugOption(FILE* fp, const char* option, int16_t bitmask)
+static void setDebugOption(FILE* fp, const char* option, uint16_t bitmask)
 {
 	const char* buffer = parse_FTLconf(fp, option);
 
