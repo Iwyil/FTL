@@ -41,7 +41,8 @@ GIT_TAG := $(shell git describe --tags --abbrev=0)
 GCCVERSION8 := $(shell expr `$(CC) -dumpversion | cut -f1 -d.` \>= 8)
 
 ### Since this is not supported, it is a temporary solution and it is expected to be specified exactly CC as clang as environment variable
-ifeq "$(CC)" "clang"
+#ifeq "$(CC)" "clang"
+ifneq (, $(findstring clang,$(CC))) 
   GCCVERSION8 = "0"
 else
   EXTRAWARN=-Wlogical-op
@@ -114,7 +115,8 @@ else
   EXTRAWARN_GCC8=
 endif
 EXTRAWARN:=-Werror -Waddress -Wmissing-field-initializers -Woverlength-strings -Wformat -Wformat-nonliteral -Wuninitialized -Wswitch-enum -Wshadow \
--Wfloat-equal -Wbad-function-cast -Wwrite-strings -Wparentheses -Wstrict-prototypes -Wmissing-prototypes -Wredundant-decls -Winline $(EXTRAWARN_GCC8)
+-Wfloat-equal -Wbad-function-cast -Wwrite-strings -Wparentheses -Wstrict-prototypes -Wmissing-prototypes -Wredundant-decls -Winline $(EXTRAWARN_GCC8) \
+-Wno-error=strict-prototypes
 
 # -FILE_OFFSET_BITS=64: used by stat(). Avoids problems with files > 2 GB on 32bit machines
 CCFLAGS=-std=gnu11 -pipe -I$(IDIR) $(WARN_FLAGS) -D_FILE_OFFSET_BITS=64 $(HARDENING_CFLAGS) $(DEBUG_CFLAGS) $(CFLAGS) $(SQLITE_FLAGS) -DHAVE_POLL_H
