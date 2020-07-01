@@ -47,7 +47,7 @@ void dbclose(void)
 	pthread_mutex_unlock(&dblock);
 }
 
-bool dbopen(void)
+bool database_open(void)
 {
 	// Lock mutex on the database
 	pthread_mutex_lock(&dblock);
@@ -91,7 +91,7 @@ int dbquery(const char *format, ...)
 
 	// Log generated SQL string when dbquery() is called
 	// although the database connection is not available
-	if(database == false || ( FTL_db == NULL && !dbopen() ))
+	if(database == false || ( FTL_db == NULL && !database_open() ))
 	{
 		logg("dbquery(\"%s\") called but database is not available!", query);
 		sqlite3_free(query);

@@ -19,7 +19,7 @@ bool db_set_FTL_property(const unsigned int ID, const int value);
 /// Execute a formatted SQL query and get the return code
 int dbquery(const char *format, ...);
 
-bool dbopen(void);
+bool database_open(void);
 void dbclose(void);
 int db_query_int(const char*);
 long get_lastID(void);

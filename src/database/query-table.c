@@ -30,7 +30,7 @@ int get_number_of_queries_in_DB(void)
 {
 	// This routine is used by the API routines.
 	// We need to handle opening/closing of the database herein.
-	if(!dbopen())
+	if(!database_open())
 	{
 		return DB_FAILED;
 	}
@@ -55,7 +55,7 @@ void DB_save_queries(void)
 		timer_start(DATABASE_WRITE_TIMER);
 
 	// Open database
-	if(!dbopen())
+	if(!database_open())
 	{
 		logg("Failed to open long-term database when trying to store queries");
 		return;
@@ -268,7 +268,7 @@ void DB_save_queries(void)
 void delete_old_queries_in_DB(void)
 {
 	// Open database
-	if(!dbopen())
+	if(!database_open())
 	{
 		logg("Failed to open long-term database when trying to delete old queries");
 		return;
@@ -301,7 +301,7 @@ void DB_read_queries(void)
 		return;
 
 	// Open database file
-	if(!dbopen())
+	if(!database_open())
 	{
 		logg("Failed to open long-term database when trying to read queries");
 		return;

@@ -287,7 +287,7 @@ static int add_netDB_network_address(const int dbID, const char* ipaddr)
 void parse_neighbor_cache(void)
 {
 	// Open database file
-	if(!dbopen())
+	if(!database_open())
 	{
 		logg("parse_neighbor_cache() - Failed to open DB");
 		return;
@@ -838,7 +838,7 @@ void updateMACVendorRecords(void)
 	}
 
 	// Open database connection
-	dbopen();
+	database_open();
 
 	sqlite3_stmt* stmt;
 	const char* selectstr = "SELECT id,hwaddr FROM network;";
@@ -896,7 +896,7 @@ void updateMACVendorRecords(void)
 char* __attribute__((malloc)) getDatabaseHostname(const char* ipaddr)
 {
 	// Open pihole-FTL.db database file
-	if(!dbopen())
+	if(!database_open())
 	{
 		logg("getDatabaseHostname(\"%s\") - Failed to open DB", ipaddr);
 		return strdup("");
