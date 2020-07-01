@@ -44,7 +44,7 @@ GCCVERSION8 := $(shell expr `$(CC) -dumpversion | cut -f1 -d.` \>= 8)
 ifeq "$(CC)" "clang"
   GCCVERSION8 = "0"
 else
-  EXTRAWARN:=-Wlogical-op
+  EXTRAWARN=-Wlogical-op
 endif
 
 # Code hardening and debugging improvements
@@ -127,7 +127,7 @@ LIBS=-pthread -lrt -Wl,-Bstatic -L/usr/local/lib -lhogweed -lgmp -lnettle
 # Flags for compiling with libidn : -lidn
 # Flags for compiling with libidn2: -lidn2
 
-LDFLAGS := $(HARDENING_LDFLAGS) $(DEBUG_LDFLAGS)
+LDFLAGS := $(LDFLAGS) $(HARDENING_LDFLAGS) $(DEBUG_LDFLAGS)
 
 # Do we want to compile a statically linked musl executable?
 ifeq "$(STATIC)" "true"
