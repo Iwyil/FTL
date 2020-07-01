@@ -555,13 +555,13 @@ only when we need to resize*/
 	}
 	//if memory is shrinking, we have to ensure to not copy over the
 	//upper limit of the new map
-	if(size => sharedMemory->size)
+	if(size >= sharedMemory->size)
 	{
 		memcpy(new_ptr, sharedMemory->ptr, sharedMemory->size);
 	}
 	else
 	{
-		memcpy(new_ptr, sharedMemory->prt, size);
+		memcpy(new_ptr, sharedMemory->ptr, size);
 	}
 	munmap(sharedMemory->ptr, sharedMemory->size);
 	close(fd);

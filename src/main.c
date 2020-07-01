@@ -21,9 +21,12 @@
 #include "signals.h"
 #include "regex_r.h"
 #include "shmem.h"
-#include "capabilities.h"
 #include "database/gravity-db.h"
 #include "timers.h"
+
+#ifdef __linux__
+#include "capabilities.h"
+#endif
 
 char * username;
 bool needGC = false;
@@ -78,9 +81,11 @@ int main (int argc, char* argv[])
 	log_counter_info();
 	check_setupVarsconf();
 
+#ifdef __linux__
 	// Check for availability of advanced capabilities
 	// immediately before starting the resolver.
 	check_capabilities();
+#endif
 
 	// Start the resolver, delay startup if requested
 	delay_startup();

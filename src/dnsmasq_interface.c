@@ -27,7 +27,6 @@
 #include "api/socket.h"
 #include "regex_r.h"
 #include "config.h"
-#include "capabilities.h"
 #include "resolve.h"
 #include "files.h"
 #include "log.h"
@@ -35,6 +34,10 @@
 #include "api/api.h"
 // global variable daemonmode
 #include "args.h"
+
+#ifdef __linux__
+#include "capabilities.h"
+#endif
 
 static void print_flags(const unsigned int flags);
 static void save_reply_type(const unsigned int flags, queriesData* query, const struct timeval response);
@@ -831,8 +834,10 @@ void FTL_dnsmasq_reload(void)
 	FTL_reload_all_domainlists();
 
 	// Print current set of capabilities if requested via debug flag
+#ifdef __linux__
 	if(config.debug & DEBUG_CAPS)
 		check_capabilities();
+#endif
 }
 
 void _FTL_reply(const unsigned short flags, const char *name, const union all_addr *addr, const int id,

@@ -1,0 +1,50 @@
+This is some sort of document that describes how I am trying to port the FTL
+codebase to an acceptable level of compatibility. As stated from the title, this
+is currently aimed to FreeBSD. I am new to the BSD family of OS. Actually I
+started playing with FreeBSD _BEACUSE_ I would like to use pi-hole directly on
+some BSD projects I have in mind.
+The changes are described in the same order the problems are found during
+compilation. In other words, in the order make decide to compile the files
+
+First problem was deciding how to organize the cross-platform code. Currently, I
+choose one of the worst way: #ifdef macros definition around the platform
+specific snippet. That way I can be sure the linux compilation remain with code
+untouched. Probably modifying the Makefile and writing platform specific code in
+separated headers would be a better solution, but currently that would also be
+too much work to maintain, with a lot of duplicated code while trying to port.
+Maybe a git branch could be enough :) but I am maintaining untouched linux code.
+
+The flags in the makefile has been duplicated and linker flags has been
+separated from the compilation ones. That because on BSDs the main compiler is
+clang, which emits warning if compiles with linker flags [complain about unused
+arguments, which end up in error with -Werror]. Also some minor changes: clang
+does not have -Wlogical-op, which has been moved in GCC specific flags; and
+warned about int with value 32768 being converted to signed int and therefore
+-32768, the signature of the guilty function has been changed to accept unsigned
+int, which i think are better for those situation, also because, for example,
+they can wrap around without undefined behaviour, per standard. Finally,
+sys/types.h in this header, which from comments was included only for int16_t,
+has been replaced with the more standard stdint.h. Honestly I hope c99 is
+supported, also because I didn't see any directive about compilation nor in
+Makefile.
+
+In case of FreeBSD compilation, sys/prctl.h, which aside from dnsmasq code was
+only used to name threads, has been replaced by pthread_set_name_np, which is
+found in pthread_np.h (np = non-posix, so those are not standard). pthread_np
+also indirectly include a MAX macro, so, the MAX found in FTL.h has been wrapped
+in a conditional #ifndef MAX. The function to set the thread name has been
+replaced by a macro, SET_THREAD_NAME(name) found in FTL.h, which maps to prctl
+in linux and to pthread_set_name_np in FreeBSD, both with predefined arguments.
+dnsmasq already support FreeBSD, so those prctl calls are not being made (at
+least I don't get any compilation error of undefined function.
+
+src/shmem.c was using mremap linux call. Wrapped some code in a very ugly way of
+in realloc_shm to keep optimization provided from mremap. If not compiling in
+linux the alternative is mmap new memory, copy the content of the old, and then
+munmap the old memory. Also removed initialization of pthread objects, becaouse
+it was empty and clnag didn't like that. However they were anyway being
+initialized just few lines later.
+
+capabilities, obviously doesn't exist in FreBSD as they exist in linux, so, at
+the moment capabilities code, which was just a check, again dnsmasq already
+resolved this, has been disabled without any replacement

@@ -15,12 +15,15 @@ DNSMASQ_VERSION = "pi-hole-2.81"
 DNSMASQ_OPTS = -DHAVE_DNSSEC -DHAVE_DNSSEC_STATIC
 # Flags for compiling with libidn : -DHAVE_IDN
 # Flags for compiling with libidn2: -DHAVE_LIBIDN2 -DIDN2_VERSION_NUMBER=0x02000003
+ifeq "Linux" "$(shell uname)"
+	FLT_PLATFORM_OBJ := capabilities.o
+endif
 
 FTL_DEPS = *.h database/*.h api/*.h version.h
 FTL_DB_OBJ = database/common.o database/query-table.o database/network-table.o database/gravity-db.o database/database-thread.o database/sqlite3-ext.o
 FTL_API_OBJ = api/socket.o api/request.o api/msgpack.o api/api.o
-FTL_OBJ = $(FTL_DB_OBJ) $(FTL_API_OBJ) main.o memory.o log.o daemon.o datastructure.o signals.o files.o setupVars.o args.o gc.o config.o \
-          dnsmasq_interface.o resolve.o regex.o shmem.o capabilities.o overTime.o timers.o vector.o
+FTL_OBJ = $(FTL_DB_OBJ) $(FTL_API_OBJ) $(FLT_PLATFORM_OBJ) main.o memory.o log.o daemon.o datastructure.o signals.o files.o \
+	  setupVars.o args.o gc.o config.o dnsmasq_interface.o resolve.o regex.o shmem.o overTime.o timers.o vector.o
 
 DNSMASQ_DEPS = config.h dhcp-protocol.h dns-protocol.h radv-protocol.h dhcp6-protocol.h dnsmasq.h ip6addr.h metrics.h ../dnsmasq_interface.h
 DNSMASQ_OBJ = arp.o dbus.o domain.o lease.o outpacket.o rrfilter.o auth.o dhcp6.o edns0.o log.o poll.o slaac.o blockdata.o dhcp.o forward.o \
