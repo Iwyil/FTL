@@ -169,8 +169,8 @@ const char *getstr(const size_t pos)
 
 /// Create a mutex for shared memory
 static pthread_mutex_t create_mutex(void) {
-	pthread_mutexattr_t lock_attr = {};
-	pthread_mutex_t lock = {};
+	pthread_mutexattr_t lock_attr;
+	pthread_mutex_t lock;
 
 	// Initialize the lock attributes
 	pthread_mutexattr_init(&lock_attr);
@@ -486,12 +486,27 @@ bool realloc_shm(SharedMemory *sharedMemory, const size_t size, const bool resiz
 	// Log that we are doing something here
 	logg("%s \"%s\" from %zu to %zu", resize ? "Resizing" : "Remapping", sharedMemory->name, sharedMemory->size, size);
 
+/*Since we don't have mremap, we have to use mmap/munmap,
+However to do so we also have to open thefile descriptor, whether
+we want to resize or not. If we have mremap, the file can be opened
+only when we need to resize*/
+#ifndef __linux__
+	const int fd = shm_open(sharedMemory->name, O_RDWR, S_IRUSR | S_IWUSR);
+	if(fd == -1)
+	{
+		logg("FATAL: realloc_shm(): Failed to open shared memory object \"%s\": %s",
+		     sharedMemory->name, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+#endif
 	// Resize shard memory object if requested
 	// If not, we only remap a shared memory object which might have changed
 	// in another process. This happens when pihole-FTL forks due to incoming
 	// TCP requests.
 	if(resize)
 	{
+
+#ifdef __linux__
 		// Open shared memory object
 		const int fd = shm_open(sharedMemory->name, O_RDWR, S_IRUSR | S_IWUSR);
 		if(fd == -1)
@@ -500,6 +515,7 @@ bool realloc_shm(SharedMemory *sharedMemory, const size_t size, const bool resiz
 			     sharedMemory->name, strerror(errno));
 			exit(EXIT_FAILURE);
 		}
+#endif
 
 		// Truncate shared memory object to specified size
 		const int result = ftruncate(fd, size);
@@ -518,6 +534,7 @@ bool realloc_shm(SharedMemory *sharedMemory, const size_t size, const bool resiz
 		local_shm_counter++;
 	}
 
+#ifdef __linux__
 	void *new_ptr = mremap(sharedMemory->ptr, sharedMemory->size, size, MREMAP_MAYMOVE);
 	if(new_ptr == MAP_FAILED)
 	{
@@ -527,6 +544,29 @@ bool realloc_shm(SharedMemory *sharedMemory, const size_t size, const bool resiz
 		exit(EXIT_FAILURE);
 	}
 
+#else
+	void *new_ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	if(new_ptr == MAP_FAILED)
+	{
+		logg("FATAL: realloc_shm(): mmap(%p, %zu, %zu, MREMAP_MAYMOVE): Failed to allocate \"%s\": %s",
+		     sharedMemory->ptr, sharedMemory->size, size, sharedMemory->name,
+		     strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	//if memory is shrinking, we have to ensure to not copy over the
+	//upper limit of the new map
+	if(size => sharedMemory->size)
+	{
+		memcpy(new_ptr, sharedMemory->ptr, sharedMemory->size);
+	}
+	else
+	{
+		memcpy(new_ptr, sharedMemory->prt, size);
+	}
+	munmap(sharedMemory->ptr, sharedMemory->size);
+	close(fd);
+#endif
+	
 	sharedMemory->ptr = new_ptr;
 	sharedMemory->size = size;
 
