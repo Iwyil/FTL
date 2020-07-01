@@ -400,7 +400,9 @@ void resolveForwardDestinations(const bool onlynew)
 void *DNSclient_thread(void *val)
 {
 	// Set thread name
-	prctl(PR_SET_NAME, "DNS client", 0, 0, 0);
+	/* Platform dependent macro defined in FTL.h. Check the specification 
+	of the underlying function*/
+	SET_THREAD_NAME("DNS client");
 
 	while(!killed)
 	{

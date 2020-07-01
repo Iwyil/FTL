@@ -26,7 +26,9 @@
 void *DB_thread(void *val)
 {
 	// Set thread name
-	prctl(PR_SET_NAME,"database",0,0,0);
+	/* Platform dependent macro defined in FTL.h. Check the specification 
+	of the underlying function*/
+	SET_THREAD_NAME("database");
 
 	// First check if the user doesn't want to use the database.
 	// If this is the case, we terminate the database thread as

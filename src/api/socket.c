@@ -324,7 +324,9 @@ static void *telnet_connection_handler_thread(void *socket_desc)
 	// Set thread name
 	char threadname[16];
 	sprintf(threadname,"telnet-%i",sock);
-	prctl(PR_SET_NAME,threadname,0,0,0);
+	/* Platform dependent macro defined in FTL.h. Check the specification 
+	of the underlying function*/
+	SET_THREAD_NAME(threadname);
 	//Receive from client
 	ssize_t n;
 	while((n = recv(sock,client_message,SOCKETBUFFERLEN-1, 0)))
@@ -375,7 +377,9 @@ static void *socket_connection_handler_thread(void *socket_desc)
 	// Set thread name
 	char threadname[16];
 	sprintf(threadname,"socket-%i",sock);
-	prctl(PR_SET_NAME,threadname,0,0,0);
+	/* Platform dependent macro defined in FTL.h. Check the specification 
+	of the underlying function*/
+	SET_THREAD_NAME(threadname);
 
 	// Receive from client
 	ssize_t n;
@@ -442,7 +446,9 @@ void *telnet_listening_thread_IPv4(void *args)
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
 	// Set thread name
-	prctl(PR_SET_NAME,"telnet-IPv4",0,0,0);
+	/* Platform dependent macro defined in FTL.h. Check the specification 
+	of the underlying function*/
+	SET_THREAD_NAME("telnet-IPv4");
 
 	// Listen as long as FTL is not killed
 	while(!killed)
@@ -483,7 +489,9 @@ void *telnet_listening_thread_IPv6(void *args)
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
 	// Set thread name
-	prctl(PR_SET_NAME,"telnet-IPv6",0,0,0);
+	/* Platform dependent macro defined in FTL.h. Check the specification 
+	of the underlying function*/
+	SET_THREAD_NAME("telnet-IPv6");
 
 	// Listen as long as FTL is not killed
 	while(!killed)
@@ -524,7 +532,9 @@ void *socket_listening_thread(void *args)
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
 	// Set thread name
-	prctl(PR_SET_NAME,"socket listener",0,0,0);
+	/* Platform dependent macro defined in FTL.h. Check the specification 
+	of the underlying function*/
+	SET_THREAD_NAME("socket listener");
 
 	// Return early to avoid CPU spinning if Unix socket is not available
 	if(!sock_avail)

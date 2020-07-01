@@ -29,7 +29,8 @@ time_t lastGCrun = 0;
 void *GC_thread(void *val)
 {
 	// Set thread name
-	prctl(PR_SET_NAME,"housekeeper",0,0,0);
+	/* Macro platform dependent from FTL.h, check platform restrictions */
+	SET_THREAD_NAME("housekeeper");
 
 	// Save timestamp as we do not want to store immediately
 	// to the database

@@ -10,6 +10,11 @@
 #ifndef FTL_H
 #define FTL_H
 
+#if !(defined(__linux__) || defined(__FreeBSD__))
+#warning "Platform not supported. Some function are not being included \
+If you want to continue you may want to define __linux__ or __FreeBSD__"
+#endif
+
 #define __USE_XOPEN
 #define _GNU_SOURCE
 #include <stdio.h>
@@ -32,7 +37,6 @@
 #include <netdb.h>
 #include <errno.h>
 #include <pthread.h>
-#include <sys/prctl.h>
 //#include <math.h>
 #include <pwd.h>
 // syslog
@@ -45,8 +49,31 @@
 #include <ifaddrs.h>
 #include <net/if.h>
 
+#ifdef __linux__
+#include <sys/prctl.h>
+#endif
+
+/* The main use of prctl() linux call (the only one, aside from dnsmasq code,
+which reinclude the header in its own source) is to rename the thread. Those macro
+creates a virtual abstract layer*/
+/*Unfortunatly I am new to the BSD family, so I don't know which OS does implements
+pthread_set_name_np and which dows not. In case some variations are found, the
+second macro shall be changed accordingly*/
+#ifdef __linux__
+#define SET_THREAD_NAME(name) prctl(PR_SET_NAME, name, 0, 0, 0)
+#elif defined __FreeBSD__
+#include <pthread_np.h>
+#define SET_THREAD_NAME(name) pthread_set_name_np(pthread_self(), name)
+#else
+#warning "No function to set threads name is defined"
+#define SET_THREAD_NAME(name)
+#endif
+
 // Define MIN and MAX macros, use them only when x and y are of the same type
+//Check if it is already defined, since it is defined in pthread_np.h
+#ifndef MAX
 #define MAX(x,y) (((x) > (y)) ? (x) : (y))
+#endif
 // MIN(x,y) is already defined in dnsmasq.h
 
 #define SOCKETBUFFERLEN 1024

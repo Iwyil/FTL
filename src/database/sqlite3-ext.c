@@ -26,6 +26,13 @@
 // struct config
 #include "config.h"
 
+/*At least on FreeBSD, including only arpa/init.h is not enough 
+  to use a lot of other network stuff which is used here
+  From the man of inet_ntop on FreeBSD (arpa/inet.h already included up*/
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
 static void subnet_match_impl(sqlite3_context *context, int argc, sqlite3_value **argv)
 {
 	// Exactly two arguments should be submitted to this routine
