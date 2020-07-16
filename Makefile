@@ -65,10 +65,10 @@ endif
 ### Clang absolutely don't like having some linker option during the compilation and emit a warning for every option in every translation unit
 ### apparently, the linker seems to ingnore compilation options
 ### So, splitted option to delete linker flags from compilation
-HARDENING_CFLAGS=-fstack-protector-strong -Wp,-D_FORTIFY_SOURCE=2 -O3 -fexceptions -funwind-tables -fasynchronous-unwind-tables
-HARDENING_LDFLAGS=-fstack-protector-strong -Wp,-D_FORTIFY_SOURCE=2 -O3 -Wl,-z,relro,-z,now -fexceptions -funwind-tables -fasynchronous-unwind-tables -Wl,-z,defs -Wl,-z,now -Wl,-z,relro
-DEBUG_CFLAGS=-fno-omit-frame-pointer
-DEBUG_LDFLAGS=-rdynamic -fno-omit-frame-pointer
+HARDENING_CFLAGS=-fstack-protector-strong -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -funwind-tables -fasynchronous-unwind-tables
+HARDENING_LDFLAGS=-fstack-protector-strong -Wp,-D_FORTIFY_SOURCE=2 -Wl,-z,relro,-z,now -fexceptions -funwind-tables -fasynchronous-unwind-tables -Wl,-z,defs -Wl,-z,now -Wl,-z,relro
+DEBUG_CFLAGS=-fno-omit-frame-pointer -g3 -ggdb
+DEBUG_LDFLAGS=-rdynamic -fno-omit-frame-pointer -g3 -ggdb
 
 # -DSQLITE_OMIT_LOAD_EXTENSION: This option omits the entire extension loading mechanism from SQLite, including sqlite3_enable_load_extension() and sqlite3_load_extension() interfaces. (needs -ldl linking option, otherwise)
 # -DSQLITE_DEFAULT_MEMSTATUS=0: This setting causes the sqlite3_status() interfaces that track memory usage to be disabled. This helps the sqlite3_malloc() routines run much faster, and since SQLite uses sqlite3_malloc() internally, this helps to make the entire library faster.

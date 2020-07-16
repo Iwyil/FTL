@@ -527,8 +527,9 @@ only when we need to resize*/
 
 		// Close shared memory object file descriptor as it is no longer
 		// needed after having called ftruncate()
+#ifdef __linux__
 		close(fd);
-
+#endif
 		// Update shm counters to indicate that at least one shared memory object changed
 		shmSettings->global_shm_counter++;
 		local_shm_counter++;
